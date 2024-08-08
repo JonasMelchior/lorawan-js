@@ -1,0 +1,157 @@
+= Join Server REST Service
+Jonas Jensen;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+This is the REST service implementing a LoRaWAN Join Server and management functionality which includes CRUD functionality for devices and related keys.
+
+== LoRaWAN
+This Join Server implements Backend Interfaces Spec. 1.0. The API which the Join Server implements to be compatible with LoRaWAN backend message types can be seen in https://lora-alliance.org/wp-content/uploads/2020/11/lorawantm-backend-interfaces-v1.0.pdf.
+The endpoints where JoinReqs and AppSKeyReqs are received, are however provided below.
+
+=== POST /lrwan/join
+This end point is where JoinReqs are received and subsequent JoinAns's are generated and returned to the Network Server.
+
+=== POST /lrwan/appskey
+This end point is where AppSKeyReqs are received and subsequent AppSKeyAns's are generated and returned to the requesting element in the network.
+
+== Device Management
+To secure the root key(s) of devices, PBKDF2 is used with HMAC-SHA512 and 16384 iterations to encrypt the keys in Java Key Stores implemented by Bouncy Castle.
+The password which the encryption key is derived from has to be provided upon creation of the device (see POST /1/devices) in which one can specify either a new credential or an existing credential, in which the latter case invovles checking the password of an already defined credential.
+The password specified (i.e. the credential) has to be provided in the header for any endpoints with update or deletion operations for a device or the retrieval of root key(s) (see GET /1/devices{DevEUI}/rkeys).
+
+JWT is used for authentication.
+
+=== POST /auth/login
+
+==== Request structure
+include::{snippets}/auth-login/http-request.adoc[]
+include::{snippets}/auth-login/request-fields.adoc[]
+
+==== Response example
+include::{snippets}/auth-login/http-response.adoc[]
+include::{snippets}/auth-login/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/auth-login/curl-request.adoc[]
+
+=== POST /1/devices
+Create a device
+
+==== Request structure
+include::{snippets}/create-device/http-request.adoc[]
+include::{snippets}/create-device/request-fields.adoc[]
+
+==== Response example
+include::{snippets}/create-device/http-response.adoc[]
+include::{snippets}/create-device/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/create-device/curl-request.adoc[]
+
+=== POST /1/devices/{DevEUI}
+!! To be used with caution !!
+
+All fields are mandatory. If a different DevEUI is specified, all session context and derived session keys will be cleared on the server. Specifying different root key(s) will not clear the session context, but in case of LoRaWAN 1.1 devices, new lifetime keys will be derived.
+
+Update a device.
+
+
+==== Request structure
+Credential password provided upon creation of device is required in header (see below) to perform an update action
+include::{snippets}/update-device/http-request.adoc[]
+include::{snippets}/update-device/request-fields.adoc[]
+
+==== Response example
+include::{snippets}/update-device/http-response.adoc[]
+include::{snippets}/update-device/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/update-device/curl-request.adoc[]
+
+=== DELETE /1/devices/{DevEUI}
+Delete a device
+
+==== Request structure
+Credential password provided upon creation of device is required in header (see below) to perform a delete action
+include::{snippets}/delete-device/http-request.adoc[]
+
+==== Response example
+include::{snippets}/delete-device/http-response.adoc[]
+include::{snippets}/delete-device/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/delete-device/curl-request.adoc[]
+
+=== GET /1/devices
+Get devices for authorized user
+
+==== Request structure
+include::{snippets}/get-devices/http-request.adoc[]
+include::{snippets}/get-devices/query-parameters.adoc[]
+
+==== Response example
+include::{snippets}/get-devices/http-response.adoc[]
+include::{snippets}/get-devices/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/get-devices/curl-request.adoc[]
+
+=== GET /1/devices/{DevEUI}
+Get device with specified DevEUI for authorized user
+
+==== Request structure
+include::{snippets}/get-device/http-request.adoc[]
+
+==== Response example
+include::{snippets}/get-devices/http-response.adoc[]
+include::{snippets}/get-devices/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/get-devices/curl-request.adoc[]
+
+=== GET /1/devices/{DevEUI}/rkeys
+Get root key(s) for specified device
+
+==== Request structure
+Credential password provided upon creation of device is required in header (see below) to retrieve root keys
+include::{snippets}/get-rkeys/http-request.adoc[]
+
+==== Response example
+include::{snippets}/get-rkeys/http-response.adoc[]
+include::{snippets}/get-rkeys/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/get-rkeys/curl-request.adoc[]
+
+=== GET /1/devices/{DevEUI}/joinlog
+Get log of JoinReqs for specified device
+
+==== Request structure
+include::{snippets}/get-joinlogs/http-request.adoc[]
+include::{snippets}/get-joinlogs/query-parameters.adoc[]
+
+==== Response example
+include::{snippets}/get-joinlogs/http-response.adoc[]
+include::{snippets}/get-joinlogs/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/get-joinlogs/curl-request.adoc[]
+
+=== GET /1/devices/{DevEUI}/appskeyreqlog
+Get log of AppSKeyReqs for specified device
+
+==== Request structure
+include::{snippets}/get-appskeyreqlogs/http-request.adoc[]
+include::{snippets}/get-appskeyreqlogs/query-parameters.adoc[]
+
+==== Response example
+include::{snippets}/get-appskeyreqlogs/http-response.adoc[]
+include::{snippets}/get-appskeyreqlogs/response-fields.adoc[]
+
+==== CURL request
+include::{snippets}/get-appskeyreqlogs/curl-request.adoc[]

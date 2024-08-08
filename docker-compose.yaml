@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:13
+    container_name: js-postgres
+    volumes:
+      - ./configuration/postgresql/initdb:/docker-entrypoint-initdb.d
+      - postgresqldata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=root
+    networks:
+      - js-net
+
+  join-server:
+    image: jonasmelchior/join-server:0.1.0
+    container_name: join-server
+    volumes:
+      - keystore-data:/root/.lrwan_js
+    depends_on:
+      - postgres
+    ports:
+      - 7090:7090
+    networks:
+      - js-net
+
+  join-server-ui:
+    image: jonasmelchior/join-server-ui:0.1.0
+    container_name: join-server-ui
+    volumes:
+      - keystore-data:/root/.lrwan_js
+    depends_on:
+      - postgres
+    ports:
+      - 8080:8080
+    networks:
+      - js-net
+
+
+
+volumes:
+  keystore-data:
+  postgresqldata:
+
+networks:
+  js-net:
+    driver: bridge
