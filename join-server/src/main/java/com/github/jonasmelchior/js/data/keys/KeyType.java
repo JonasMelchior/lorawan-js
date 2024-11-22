@@ -10,5 +10,6 @@ public enum KeyType {
     SNwkSIntKey,
     NwkSEncKey,
     JSIntKey,
-    JSEncKey
+    JSEncKey,
+    KEK
 }

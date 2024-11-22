@@ -6,7 +6,7 @@ import java.util.Objects;
 
 public class KeySpec {
     @JsonIgnore
-    private String devEUI;
+    private String identifier;
     private String key;
     private KeyType keyType;
 
@@ -15,16 +15,16 @@ public class KeySpec {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         KeySpec keySpec = (KeySpec) o;
-        return Objects.equals(devEUI, keySpec.devEUI);
+        return Objects.equals(identifier, keySpec.identifier);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(devEUI);
+        return Objects.hash(identifier);
     }
 
-    public KeySpec(String devEUI, String key, KeyType keyType) {
-        this.devEUI = devEUI;
+    public KeySpec(String identifier, String key, KeyType keyType) {
+        this.identifier = identifier;
         this.key = key;
         this.keyType = keyType;
     }
@@ -37,12 +37,12 @@ public class KeySpec {
     public KeySpec() {
     }
 
-    public String getDevEUI() {
-        return devEUI;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setDevEUI(String devEUI) {
-        this.devEUI = devEUI;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getKey() {
@@ -64,7 +64,7 @@ public class KeySpec {
     @Override
     public String toString() {
         return "KeySpec{" +
-                "devEUI='" + devEUI + '\'' +
+                "devEUI='" + identifier + '\'' +
                 ", key='" + key + '\'' +
                 ", keyType=" + keyType +
                 '}';

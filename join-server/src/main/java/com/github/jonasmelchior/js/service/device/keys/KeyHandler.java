@@ -91,7 +91,7 @@ public class KeyHandler {
             throw new RootKeyPersistenceException("Couldn't retrieve key information for DevEUI " + oldDevEUI);
         }
 
-        boolean deleteSessionKeys = !oldDevEUI.equals(keySpec.getDevEUI());
+        boolean deleteSessionKeys = !oldDevEUI.equals(keySpec.getIdentifier());
         deleteKSKey(devKeyId.get(), deleteSessionKeys);
 
         if (fromMACVersion.equals(MACVersion.LORAWAN_1_1) &&
@@ -105,15 +105,15 @@ public class KeyHandler {
                     );
             devKeyId.get().getKsKeySpecs().add(new KsKeySpec(
                     KeyType.AppKey1_0,
-                    "appkey1_0;" + keySpec.getDevEUI()
+                    "appkey1_0;" + keySpec.getIdentifier()
             ));
         }
 
         // Update devKeyId with potential new DevEUI along with KsKeySpecs in case DevEUI is different.
         // Note that the MAC version might not always change
-        updateDevKeyIdAndKsKeySpecs(devKeyId.get(), keySpec.getDevEUI());
+        updateDevKeyIdAndKsKeySpecs(devKeyId.get(), keySpec.getIdentifier());
 
-        Optional<KeyCredential> keyCredential = devIdService.findCredentialByDevEUI(keySpec.getDevEUI());
+        Optional<KeyCredential> keyCredential = devIdService.findCredentialByDevEUI(keySpec.getIdentifier());
         if (keyCredential.isPresent()) {
             storeRootKey(new ArrayList<>(List.of(keySpec)), getCredential(keyCredential.get().getIdentifier()));
         }
@@ -126,7 +126,7 @@ public class KeyHandler {
             throw new RootKeyPersistenceException("Couldn't retrieve key information for DevEUI " + oldDevEUI);
         }
 
-        boolean deleteSessionKeys = !oldDevEUI.equals(keySpecs.get(0).getDevEUI());
+        boolean deleteSessionKeys = !oldDevEUI.equals(keySpecs.get(0).getIdentifier());
         deleteKSKey(devKeyId.get(), deleteSessionKeys);
 
         if (fromMACVersion.equals(MACVersion.LORAWAN_1_0) && toMACVersion.equals(MACVersion.LORAWAN_1_1)) {
@@ -138,8 +138,8 @@ public class KeyHandler {
             for (KeySpec keySpec : keySpecs) {
                 String alias = "";
                 switch (keySpec.getKeyType()) {
-                    case AppKey1_1 -> alias = "appkey1_1;" + keySpec.getDevEUI();
-                    case NwkKey1_1 -> alias = "nwkkey1_1;" + keySpec.getDevEUI();
+                    case AppKey1_1 -> alias = "appkey1_1;" + keySpec.getIdentifier();
+                    case NwkKey1_1 -> alias = "nwkkey1_1;" + keySpec.getIdentifier();
                 }
                 ksKeySpecs.add(new KsKeySpec(keySpec.getKeyType(), alias));
             }
@@ -148,9 +148,9 @@ public class KeyHandler {
 
         // Update devKeyId with potential new DevEUI along with KsKeySpecs in case DevEUI is different.
         // Note that the MAC version might not always change
-        updateDevKeyIdAndKsKeySpecs(devKeyId.get(), keySpecs.get(0).getDevEUI());
+        updateDevKeyIdAndKsKeySpecs(devKeyId.get(), keySpecs.get(0).getIdentifier());
 
-        Optional<KeyCredential> keyCredential = devIdService.findCredentialByDevEUI(keySpecs.get(0).getDevEUI());
+        Optional<KeyCredential> keyCredential = devIdService.findCredentialByDevEUI(keySpecs.get(0).getIdentifier());
         if (keyCredential.isPresent()) {
             storeRootKey(keySpecs, getCredential(keyCredential.get().getIdentifier()));
         }
@@ -166,7 +166,7 @@ public class KeyHandler {
     }
 
     public void storeSessionKeys(List<KeySpec> keySpecs, Boolean isInitialSession) throws SessionKeyPersistenceException {
-        Optional<DevKeyId> devKeyId = devIdService.findByDevEUI(keySpecs.get(0).getDevEUI());
+        Optional<DevKeyId> devKeyId = devIdService.findByDevEUI(keySpecs.get(0).getIdentifier());
         if (devKeyId.isEmpty()) {
             return;
         }
@@ -175,11 +175,11 @@ public class KeyHandler {
             for (KeySpec keySpec : keySpecs) {
                 String alias = "";
                 switch (keySpec.getKeyType()) {
-                    case AppSKey -> alias = "appskey;" + keySpec.getDevEUI();
-                    case NwkSKey -> alias = "nwkskey;" + keySpec.getDevEUI();
-                    case FNwkSIntKey -> alias = "fnwksintkey;" + keySpec.getDevEUI();
-                    case SNwkSIntKey -> alias = "snwksintkey;" + keySpec.getDevEUI();
-                    case NwkSEncKey -> alias = "nwksenckey;" + keySpec.getDevEUI();
+                    case AppSKey -> alias = "appskey;" + keySpec.getIdentifier();
+                    case NwkSKey -> alias = "nwkskey;" + keySpec.getIdentifier();
+                    case FNwkSIntKey -> alias = "fnwksintkey;" + keySpec.getIdentifier();
+                    case SNwkSIntKey -> alias = "snwksintkey;" + keySpec.getIdentifier();
+                    case NwkSEncKey -> alias = "nwksenckey;" + keySpec.getIdentifier();
                 }
                 devKeyId.get().getKsKeySpecs().add(new KsKeySpec(keySpec.getKeyType(), alias));
             }
@@ -308,20 +308,20 @@ public class KeyHandler {
         for (KeySpec keySpec : keySpecs) {
             KsKeySpec ksKeySpec = new KsKeySpec(keySpec.getKeyType());
             switch (keySpec.getKeyType()) {
-                case AppKey1_0 -> ksKeySpec.setAlias("appkey1_0;" + keySpec.getDevEUI());
-                case AppKey1_1 -> ksKeySpec.setAlias("appkey1_1;" + keySpec.getDevEUI());
-                case NwkKey1_1 -> ksKeySpec.setAlias("nwkkey1_1;"  + keySpec.getDevEUI());
-                case AppSKey -> ksKeySpec.setAlias("appskey;" + keySpec.getDevEUI());
-                case NwkSKey -> ksKeySpec.setAlias("nwkskey;" + keySpec.getDevEUI());
-                case FNwkSIntKey -> ksKeySpec.setAlias("fnwksintkey;"  + keySpec.getDevEUI());
-                case SNwkSIntKey -> ksKeySpec.setAlias("snwksintkey;" + keySpec.getDevEUI());
-                case NwkSEncKey -> ksKeySpec.setAlias("nwksenckey;" + keySpec.getDevEUI());
+                case AppKey1_0 -> ksKeySpec.setAlias("appkey1_0;" + keySpec.getIdentifier());
+                case AppKey1_1 -> ksKeySpec.setAlias("appkey1_1;" + keySpec.getIdentifier());
+                case NwkKey1_1 -> ksKeySpec.setAlias("nwkkey1_1;"  + keySpec.getIdentifier());
+                case AppSKey -> ksKeySpec.setAlias("appskey;" + keySpec.getIdentifier());
+                case NwkSKey -> ksKeySpec.setAlias("nwkskey;" + keySpec.getIdentifier());
+                case FNwkSIntKey -> ksKeySpec.setAlias("fnwksintkey;"  + keySpec.getIdentifier());
+                case SNwkSIntKey -> ksKeySpec.setAlias("snwksintkey;" + keySpec.getIdentifier());
+                case NwkSEncKey -> ksKeySpec.setAlias("nwksenckey;" + keySpec.getIdentifier());
             }
-            if (!devKeyKsKeySpecs.containsKey(keySpec.getDevEUI())) {
-                devKeyKsKeySpecs.put(keySpec.getDevEUI(), new ArrayList<>(List.of(ksKeySpec)));
+            if (!devKeyKsKeySpecs.containsKey(keySpec.getIdentifier())) {
+                devKeyKsKeySpecs.put(keySpec.getIdentifier(), new ArrayList<>(List.of(ksKeySpec)));
             }
             else {
-                devKeyKsKeySpecs.get(keySpec.getDevEUI()).add(ksKeySpec);
+                devKeyKsKeySpecs.get(keySpec.getIdentifier()).add(ksKeySpec);
             }
         }
 
@@ -361,15 +361,15 @@ public class KeyHandler {
             for (KeySpec keySpec : keySpecs) {
                 KsKeySpec ksKeySpec = new KsKeySpec(keySpec.getKeyType());
                 switch (keySpec.getKeyType()) {
-                    case AppKey1_0 -> ksKeySpec.setAlias("appkey1_0;" + keySpec.getDevEUI());
-                    case AppKey1_1 -> ksKeySpec.setAlias("appkey1_1;" + keySpec.getDevEUI());
-                    case NwkKey1_1 -> ksKeySpec.setAlias("nwkkey1_1;"  + keySpec.getDevEUI());
+                    case AppKey1_0 -> ksKeySpec.setAlias("appkey1_0;" + keySpec.getIdentifier());
+                    case AppKey1_1 -> ksKeySpec.setAlias("appkey1_1;" + keySpec.getIdentifier());
+                    case NwkKey1_1 -> ksKeySpec.setAlias("nwkkey1_1;"  + keySpec.getIdentifier());
                 }
-                if (!devKeyKsKeySpecs.containsKey(keySpec.getDevEUI())) {
-                    devKeyKsKeySpecs.put(keySpec.getDevEUI(), new ArrayList<>(List.of(ksKeySpec)));
+                if (!devKeyKsKeySpecs.containsKey(keySpec.getIdentifier())) {
+                    devKeyKsKeySpecs.put(keySpec.getIdentifier(), new ArrayList<>(List.of(ksKeySpec)));
                 }
                 else {
-                    devKeyKsKeySpecs.get(keySpec.getDevEUI()).add(ksKeySpec);
+                    devKeyKsKeySpecs.get(keySpec.getIdentifier()).add(ksKeySpec);
                 }
             }
 
@@ -411,11 +411,11 @@ public class KeyHandler {
                 SecretKeySpec key = new SecretKeySpec(Hex.decodeHex(keySpec.getKey()), "AES");
                 String alias = "";
                 switch (keySpec.getKeyType()) {
-                    case AppSKey -> alias = "appskey;" + keySpec.getDevEUI();
-                    case NwkSKey -> alias = "nwkskey;" + keySpec.getDevEUI();
-                    case FNwkSIntKey -> alias = "fnwksintkey;"  + keySpec.getDevEUI();
-                    case SNwkSIntKey -> alias = "snwksintkey;" + keySpec.getDevEUI();
-                    case NwkSEncKey -> alias = "nwksenckey;" + keySpec.getDevEUI();
+                    case AppSKey -> alias = "appskey;" + keySpec.getIdentifier();
+                    case NwkSKey -> alias = "nwkskey;" + keySpec.getIdentifier();
+                    case FNwkSIntKey -> alias = "fnwksintkey;"  + keySpec.getIdentifier();
+                    case SNwkSIntKey -> alias = "snwksintkey;" + keySpec.getIdentifier();
+                    case NwkSEncKey -> alias = "nwksenckey;" + keySpec.getIdentifier();
                 }
                 keyStore.setKeyEntry(alias, key, password.toCharArray(), null);
             }
@@ -439,9 +439,9 @@ public class KeyHandler {
                 SecretKeySpec key = new SecretKeySpec(Hex.decodeHex(keySpec.getKey()), "AES");
                 String alias = "";
                 switch (keySpec.getKeyType()) {
-                    case AppKey1_0 -> alias = "appkey1_0;" + keySpec.getDevEUI();
-                    case AppKey1_1 -> alias = "appkey1_1;" + keySpec.getDevEUI();
-                    case NwkKey1_1 -> alias = "nwkkey1_1;"  + keySpec.getDevEUI();
+                    case AppKey1_0 -> alias = "appkey1_0;" + keySpec.getIdentifier();
+                    case AppKey1_1 -> alias = "appkey1_1;" + keySpec.getIdentifier();
+                    case NwkKey1_1 -> alias = "nwkkey1_1;"  + keySpec.getIdentifier();
                 }
                 keyStore.setKeyEntry(alias, key, password.toCharArray(), null);
 
@@ -491,6 +491,100 @@ public class KeyHandler {
         }
     }
 
+    public void storeKek(String kek, String alias) {
+        try {
+            InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
+            inputStream.close();
+
+            SecretKeySpec aesKey = new SecretKeySpec(Hex.decodeHex(kek), "AES");
+            keyStore.setKeyEntry(alias, aesKey, System.getProperty("master_pwd").toCharArray(), null);
+
+            OutputStream outputStream = new FileOutputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.store(outputStream, System.getProperty("master_pwd").toCharArray());
+            outputStream.close();
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | DecoderException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void storeKeks(String kek, List<String> aliases) {
+        try {
+            InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
+            inputStream.close();
+
+            for (String alias : aliases) {
+                SecretKeySpec aesKey = new SecretKeySpec(Hex.decodeHex(kek), "AES");
+                keyStore.setKeyEntry(alias, aesKey, System.getProperty("master_pwd").toCharArray(), null);
+            }
+
+            OutputStream outputStream = new FileOutputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.store(outputStream, System.getProperty("master_pwd").toCharArray());
+            outputStream.close();
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | DecoderException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void updateKek(String kek, String oldAlias, String alias) {
+        try {
+            InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
+            inputStream.close();
+
+            if (keyStore.isKeyEntry(oldAlias)) {
+                keyStore.deleteEntry(oldAlias);
+            }
+            SecretKeySpec aesKey = new SecretKeySpec(Hex.decodeHex(kek), "AES");
+            keyStore.setKeyEntry(alias, aesKey, System.getProperty("master_pwd").toCharArray(), null);
+
+            OutputStream outputStream = new FileOutputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.store(outputStream, System.getProperty("master_pwd").toCharArray());
+            outputStream.close();
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | DecoderException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteKek(String alias) {
+        try {
+            InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
+            inputStream.close();
+
+            if (keyStore.isKeyEntry(alias)) {
+                keyStore.deleteEntry(alias);
+            }
+
+            OutputStream outputStream = new FileOutputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.store(outputStream, System.getProperty("master_pwd").toCharArray());
+            outputStream.close();
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void deleteKeks(List<String> aliases) {
+        try {
+            InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
+            inputStream.close();
+
+            for (String alias : aliases) {
+                if (keyStore.isKeyEntry(alias)) {
+                    keyStore.deleteEntry(alias);
+                }
+            }
+
+            OutputStream outputStream = new FileOutputStream(System.getProperty("keystore_filepath_kek"));
+            keyStore.store(outputStream, System.getProperty("master_pwd").toCharArray());
+            outputStream.close();
+        } catch (CertificateException | IOException | NoSuchAlgorithmException | KeyStoreException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void setRandomKek() {
         try {
             InputStream inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
@@ -528,23 +622,21 @@ public class KeyHandler {
         } catch (CertificateException | IOException | NoSuchAlgorithmException | DecoderException | KeyStoreException e) {
             throw new RuntimeException(e);
         }
-
     }
 
-    public Key getKek() {
+    public Key getKek(String alias) {
         InputStream inputStream = null;
         try {
             inputStream = new FileInputStream(System.getProperty("keystore_filepath_kek"));
             keyStore.load(inputStream, System.getProperty("master_pwd").toCharArray());
             inputStream.close();
 
-            return keyStore.getKey("kek", System.getProperty("master_pwd").toCharArray());
+            return keyStore.getKey(alias, System.getProperty("master_pwd").toCharArray());
         } catch (CertificateException | IOException | NoSuchAlgorithmException | UnrecoverableKeyException |
                  KeyStoreException e) {
             e.printStackTrace();
             return null;
         }
-
 
     }
 }

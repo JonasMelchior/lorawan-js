@@ -2,6 +2,7 @@ package com.github.jonasmelchior.js.data.device;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.github.jonasmelchior.js.data.keys.KsKeySpec;
 import com.github.jonasmelchior.js.data.lrwan.MACVersion;
 import com.github.jonasmelchior.js.data.user.User;
 import com.github.jonasmelchior.js.json.Views;
@@ -23,6 +24,10 @@ public class Device implements RSQLVisitor {
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonView(Views.Detailed.class)
     private SessionStatus sessionStatus;
+    @JsonView(Views.Detailed.class)
+    private boolean isKekEnabled = false;
+    @JsonView(Views.Detailed.class)
+    private String kekLabel;
     @ManyToOne
     @JsonView(Views.Detailed.class)
     private User owner;
@@ -164,4 +169,19 @@ public class Device implements RSQLVisitor {
         return id;
     }
 
+    public String getKekLabel() {
+        return kekLabel;
+    }
+
+    public void setKekLabel(String kekLabel) {
+        this.kekLabel = kekLabel;
+    }
+
+    public Boolean getKekEnabled() {
+        return isKekEnabled;
+    }
+
+    public void setKekEnabled(Boolean kekEnabled) {
+        isKekEnabled = kekEnabled;
+    }
 }

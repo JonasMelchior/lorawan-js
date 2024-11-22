@@ -73,6 +73,7 @@ public class Utils {
         if (optionalDevice.isEmpty()) {
             deviceKeyHandler.init(
                     new KeySpec("0000000000000301", "00000000000000000000000706050407", KeyType.AppKey1_0),
+                    null,
                     "My_Test_Password1",
                     "Credential1",
                     user,
@@ -113,6 +114,7 @@ public class Utils {
                             new KeySpec("0000000000000301", "00000000000000000000000706050407", KeyType.AppKey1_1),
                             new KeySpec("0000000000000301", "00000000000000000000000706050407", KeyType.NwkKey1_1)
                     )),
+                    null,
                     "My_Test_Password1",
                     "Credential1",
                     user,

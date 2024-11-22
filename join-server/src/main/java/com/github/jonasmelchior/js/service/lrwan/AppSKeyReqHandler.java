@@ -114,12 +114,21 @@ public class AppSKeyReqHandler {
         }
 
         try {
-            Key kek = deviceKeyHandler.getKek();
             Key appSKey = deviceKeyHandler.getAppSKey(appSKeyReq.getDevEUI());
             appSKeyAns.setResult(new Result(
                     "Success", "AppSKey successfully retrieved"
             ));
-            appSKeyAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey.getEncoded())).toUpperCase(), kek));
+
+            if (device.getKekEnabled()) {
+                Key kek = deviceKeyHandler.getKek(appSKeyReq.getDevEUI());
+                String kekLabel = device.getKekLabel();
+
+                appSKeyAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey.getEncoded())).toUpperCase(), kekLabel, kek));
+            }
+            else {
+                appSKeyAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey.getEncoded())).toUpperCase()));
+            }
+
             postProcess(appSKeyReqLog, appSKeyAns, true);
         } catch (JoinReqFailedExc e) {
             appSKeyAns.setResult(new Result(

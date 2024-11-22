@@ -73,7 +73,7 @@ public class RegisterDevicesView extends VerticalLayout {
         this.deviceService = deviceService;
 
         setRegisterSingleLayout();
-        setInBulkLayout();
+        setRegisterInBulkLayout();
 
         tabs = new Tabs(tabOptions);
         tabs.addSelectedChangeListener( change -> {
@@ -103,7 +103,6 @@ public class RegisterDevicesView extends VerticalLayout {
         devEUIField.setMaxLength(16);
         devEUIField.setMinLength(16);
 
-
         RadioButtonGroup<MACVersion> macVersionButtonGroup = new MACVersionComboBox();
         macVersionButtonGroup.setValue(MACVersion.LORAWAN_1_0);
 
@@ -126,11 +125,35 @@ public class RegisterDevicesView extends VerticalLayout {
 
         macVersionButtonGroup.addValueChangeListener( change -> {
 
-            if (change.getValue().equals(MACVersion.LORAWAN_1_0)) {
+            if (change.getValue().equals(MACVersion.LORAWAN_1_0) || change.getValue().equals(MACVersion.LORAWAN_1_0_1) ||
+                    change.getValue().equals(MACVersion.LORAWAN_1_0_2) || change.getValue().equals(MACVersion.LORAWAN_1_0_3) ||
+                    change.getValue().equals(MACVersion.LORAWAN_1_0_4)) {
                 keysLayout.remove(nwkKeyField);
             }
             else if (change.getValue().equals(MACVersion.LORAWAN_1_1)) {
                 keysLayout.add(nwkKeyField);
+            }
+        });
+
+        RadioButtonGroup<String> kekEnabledButtonGroup = new RadioButtonGroup<>("KEK");
+        kekEnabledButtonGroup.setItems("Wrap keys when under transportation", "No wrapping");
+        kekEnabledButtonGroup.setValue("Wrap keys when under transportation");
+
+        TextField kekLabelField = new TextField("KEK Label");
+        TextField wrappingKeyField = new TextField("Wrapping Key");
+        kekLabelField.setWidth("400px");
+        wrappingKeyField.setWidth("400px");
+        kekLabelField.setRequired(true);
+        wrappingKeyField.setRequired(true);
+
+        VerticalLayout kekLayout = new VerticalLayout(kekEnabledButtonGroup, kekLabelField, wrappingKeyField);
+        kekLayout.setPadding(false);
+        kekEnabledButtonGroup.addValueChangeListener( change -> {
+            if (change.getValue().equals("Wrap keys when under transportation")) {
+                kekLayout.add(kekLabelField, wrappingKeyField);
+            }
+            else if (change.getValue().equals("No wrapping")) {
+                kekLayout.remove(kekLabelField, wrappingKeyField);
             }
         });
 
@@ -188,10 +211,19 @@ public class RegisterDevicesView extends VerticalLayout {
             }
             else {
                 Pair<Boolean, String> result = null;
+                KeySpec kek = null;
+                if (kekEnabledButtonGroup.getValue().equals("Wrap keys when under transportation")) {
+                    kek = new KeySpec(
+                            kekLabelField.getValue(),
+                            wrappingKeyField.getValue(),
+                            KeyType.KEK
+                    );
+                }
                 if (macVersionButtonGroup.getValue().equals(MACVersion.LORAWAN_1_0)) {
                     if (credentialTypeButtonGroup.getValue().equals("Existing Credential")) {
                         result = deviceKeyHandler.init(
                                 new KeySpec(devEUIField.getValue().toUpperCase(), appKeyField.getValue().toUpperCase(), KeyType.AppKey1_0),
+                                kek,
                                 existingCredential.getValue(),
                                 VaadinSession.getCurrent().getAttribute(User.class),
                                 false,
@@ -201,6 +233,7 @@ public class RegisterDevicesView extends VerticalLayout {
                     else {
                         result = deviceKeyHandler.init(
                                 new KeySpec(devEUIField.getValue().toUpperCase(), appKeyField.getValue().toUpperCase(), KeyType.AppKey1_0),
+                                kek,
                                 newCredentialPasswordField.getValue(),
                                 newCredentialIdField.getValue(),
                                 VaadinSession.getCurrent().getAttribute(User.class),
@@ -216,6 +249,7 @@ public class RegisterDevicesView extends VerticalLayout {
                                         new KeySpec(devEUIField.getValue().toUpperCase(), appKeyField.getValue().toUpperCase(), KeyType.AppKey1_1),
                                         new KeySpec(devEUIField.getValue().toUpperCase(), nwkKeyField.getValue().toUpperCase(), KeyType.NwkKey1_1)
                                 )),
+                                kek,
                                 existingCredential.getValue(),
                                 VaadinSession.getCurrent().getAttribute(User.class),
                                 false,
@@ -228,6 +262,7 @@ public class RegisterDevicesView extends VerticalLayout {
                                         new KeySpec(devEUIField.getValue().toUpperCase(), appKeyField.getValue().toUpperCase(), KeyType.AppKey1_1),
                                         new KeySpec(devEUIField.getValue().toUpperCase(), nwkKeyField.getValue().toUpperCase(), KeyType.NwkKey1_1)
                                 )),
+                                kek,
                                 newCredentialPasswordField.getValue(),
                                 newCredentialIdField.getValue(),
                                 VaadinSession.getCurrent().getAttribute(User.class),
@@ -256,12 +291,13 @@ public class RegisterDevicesView extends VerticalLayout {
         registerSingleLayout = new VerticalLayout(
                 devEUIField,
                 keysLayout,
+                kekLayout,
                 credentialLayout,
                 registerButton
         );
     }
 
-    private void setInBulkLayout() {
+    private void setRegisterInBulkLayout() {
         RadioButtonGroup<MACVersion> macVersionButtonGroup = new MACVersionComboBox();
         macVersionButtonGroup.setValue(MACVersion.LORAWAN_1_0);
 
@@ -294,6 +330,28 @@ public class RegisterDevicesView extends VerticalLayout {
                 credentialLayout.remove(newCredentialIdField);
                 credentialLayout.remove(newCredentialPasswordField);
                 credentialLayout.add(existingCredential);
+            }
+        });
+
+        RadioButtonGroup<String> kekEnabledButtonGroup = new RadioButtonGroup<>("KEK");
+        kekEnabledButtonGroup.setItems("Wrap keys when under transportation", "No wrapping");
+        kekEnabledButtonGroup.setValue("Wrap keys when under transportation");
+
+        TextField kekLabelField = new TextField("KEK Label");
+        TextField wrappingKeyField = new TextField("Wrapping Key");
+        kekLabelField.setWidth("400px");
+        wrappingKeyField.setWidth("400px");
+        kekLabelField.setRequired(true);
+        wrappingKeyField.setRequired(true);
+
+        VerticalLayout kekLayout = new VerticalLayout(kekEnabledButtonGroup, kekLabelField, wrappingKeyField);
+        kekLayout.setPadding(false);
+        kekEnabledButtonGroup.addValueChangeListener( change -> {
+            if (change.getValue().equals("Wrap keys when under transportation")) {
+                kekLayout.add(kekLabelField, wrappingKeyField);
+            }
+            else if (change.getValue().equals("No wrapping")) {
+                kekLayout.remove(kekLabelField, wrappingKeyField);
             }
         });
 
@@ -433,10 +491,20 @@ public class RegisterDevicesView extends VerticalLayout {
             else if (!isUploadValid.get()) {
                 new ErrorNotification("Valid CSV has not been uploaded").open();
             }
-            else if (deviceService.isDuplicate(rootKeySpecs.stream().map(KeySpec::getDevEUI).toList())) {
+            else if (deviceService.isDuplicate(rootKeySpecs.stream().map(KeySpec::getIdentifier).toList())) {
                 new ErrorNotification("One or more DevEUIs parsed in the CSV already exist on the join server").open();
             }
             else {
+                KeySpec kek;
+                if (kekEnabledButtonGroup.getValue().equals("Wrap keys when under transportation")) {
+                    kek = new KeySpec(
+                            kekLabelField.getValue(),
+                            wrappingKeyField.getValue(),
+                            KeyType.KEK
+                    );
+                } else {
+                    kek = null;
+                }
                 if (macVersionButtonGroup.getValue().equals(MACVersion.LORAWAN_1_0)) {
                     if (credentialTypeButtonGroup.getValue().equals("Existing Credential")) {
                         UI ui = click.getSource().getUI().orElseThrow();
@@ -450,6 +518,7 @@ public class RegisterDevicesView extends VerticalLayout {
                         executor.submit(() -> {
                             deviceKeyHandler.init(
                                     rootKeySpecs,
+                                    kek,
                                     existingCredential.getValue(),
                                     currentUser,
                                     false,
@@ -476,6 +545,7 @@ public class RegisterDevicesView extends VerticalLayout {
                         executor.submit(() -> {
                             deviceKeyHandler.init(
                                     rootKeySpecs,
+                                    kek,
                                     newCredentialPasswordField.getValue(),
                                     newCredentialIdField.getValue(),
                                     currentUser,
@@ -507,6 +577,7 @@ public class RegisterDevicesView extends VerticalLayout {
                         executor.submit(() -> {
                             deviceKeyHandler.init(
                                     rootKeySpecs,
+                                    kek,
                                     existingCredential.getValue(),
                                     currentUser,
                                     false,
@@ -535,6 +606,7 @@ public class RegisterDevicesView extends VerticalLayout {
                         executor.submit(() -> {
                             deviceKeyHandler.init(
                                     rootKeySpecs,
+                                    kek,
                                     newCredentialPasswordField.getValue(),
                                     newCredentialIdField.getValue(),
                                     currentUser,
@@ -561,6 +633,7 @@ public class RegisterDevicesView extends VerticalLayout {
         VerticalLayout registerLayout = new VerticalLayout(
                 progressLayout,
                 macVersionButtonGroup,
+                kekLayout,
                 credentialLayout,
                 upload,
                 registerButton

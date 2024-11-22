@@ -5,7 +5,9 @@ import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
 import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -14,24 +16,24 @@ public class KeyEnvelope {
     private String kEKLabel;
     private String aESKey;
 
-    public KeyEnvelope(String aESKey) {
-        this.aESKey = aESKey;
+    public KeyEnvelope(String key) {
+        this.aESKey = key;
     }
 
-    public KeyEnvelope(String sessionKey, Key kek) throws JoinReqFailedExc {
-        this.aESKey = sessionKey;
-//        TODO: change this later ...
-//        this.kEKLabel = "cibi_key";
-//        try {
-//            Cipher cipher = Cipher.getInstance("AESKW");
-//            cipher.init(Cipher.WRAP_MODE, kek);
-//            byte[] wrappedSessionKey = cipher.wrap(new SecretKeySpec(Hex.decodeHex(sessionKey), "AES"));
-//            this.aESKey = Hex.encodeHexString(wrappedSessionKey);
-//        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | DecoderException |
-//                 IllegalBlockSizeException e) {
-//            throw new JoinReqFailedExc(e.getMessage());
-//        }
+    public KeyEnvelope(String key, String kekLabel, Key kek) throws JoinReqFailedExc {
+        this.aESKey = key;
+        this.kEKLabel = kekLabel;
+        try {
+            Cipher cipher = Cipher.getInstance("AESKW");
+            cipher.init(Cipher.WRAP_MODE, kek);
+            byte[] wrappedSessionKey = cipher.wrap(new SecretKeySpec(Hex.decodeHex(key), "AES"));
+            this.aESKey = Hex.encodeHexString(wrappedSessionKey);
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | DecoderException |
+                 IllegalBlockSizeException e) {
+            throw new JoinReqFailedExc(e.getMessage());
+        }
     }
+
 
     public static Key unwrap(String wrappedKey, Key kek) {
         Cipher cipher = null;

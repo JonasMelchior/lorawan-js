@@ -9,6 +9,7 @@ import java.util.List;
 public class CreateDeviceDTO {
     private String devEUI;
     private List<KeySpec> keySpecs;
+    private Kek kek;
     private MACVersion macVersion;
     private Credential credential;
 
@@ -53,11 +54,20 @@ public class CreateDeviceDTO {
         this.macVersion = macVersion;
     }
 
+    public Kek getKek() {
+        return kek;
+    }
+
+    public void setKek(Kek kek) {
+        this.kek = kek;
+    }
+
     @Override
     public String toString() {
         return "CreateDeviceDTO{" +
                 "devEUI='" + devEUI + '\'' +
                 ", keySpecs=" + keySpecs +
+                ", kek=" + kek +
                 ", macVersion=" + macVersion +
                 ", credential=" + credential +
                 '}';

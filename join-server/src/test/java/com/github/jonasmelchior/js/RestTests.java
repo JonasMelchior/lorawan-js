@@ -74,7 +74,6 @@ public class RestTests {
     private Utils utils;
     private MockMvc mockMvc;
 
-
     @Before
     public void setUp() {
 
@@ -130,6 +129,10 @@ public class RestTests {
                         "            \"keyType\": \"AppKey1_0\"\n" +
                         "        }\n" +
                         "    ],\n" +
+                        "    \"kek\": {\n" +
+                        "         \"kekLabel\": \"my_label\",\n" +
+                        "         \"aesKey\": \"3ac2e183ef16dfe9b331d5c586ca8be1\"\n" +
+                        "     },\n" +
                         "    \"macVersion\": \"LORAWAN_1_0\",\n" +
                         "    \"credential\": {\n" +
                         "        \"credentialID\": \"Test Credential ID4\",\n" +
@@ -141,9 +144,12 @@ public class RestTests {
                 .andDo(document("create-device",
                         requestFields(
                                 fieldWithPath("devEUI").description("64-bit globally unique identifier"),
-                                fieldWithPath("keySpecs").description("JSON Object describing the key to be persisted"),
+                                fieldWithPath("keySpecs").description("JSON Object for the key to be persisted"),
                                 fieldWithPath("keySpecs[].key").description("The key in plaintext"),
                                 fieldWithPath("keySpecs[].keyType").description("The type of key to be persisted. Allowed values: [AppKey1_0, AppKey1_1, NwkKey1_1]"),
+                                fieldWithPath("kek").description("JSON Object for the Key Encryption Key used for wrapping the root key(s) when interfacing with AS or NS as specified in LoRaWAN Backend Interfaces Specification"),
+                                fieldWithPath("kek.kekLabel").description("KEKLabel as specified in Backend Interfaces"),
+                                fieldWithPath("kek.aesKey").description("Key used for wrapping operation as specified in RFC 3394. Allowed key sizes [128, 192, 256]"),
                                 fieldWithPath("macVersion").description("MAC Version of the LoRaWAN Protocol which the end-device implements. Allowed values: [LORAWAN_1_0, LORAWAN_1_0_2, LORAWAN_1_0_3, LORAWAN_1_0_4, LORAWAN_1_1]"),
                                 fieldWithPath("credential").description("JSON Object containing credential information"),
                                 fieldWithPath("credential.credentialID").description("ID of the credential"),
@@ -172,6 +178,10 @@ public class RestTests {
                                 "            \"keyType\": \"AppKey1_0\"\n" +
                                 "        }\n" +
                                 "    ],\n" +
+                                "    \"kek\": {\n" +
+                                "        \"kekLabel\": \"my_label\",\n" +
+                                "        \"aesKey\": \"3ac2e183ef16dfe9b121d5c586ac8be1\"\n" +
+                                "    },\n" +
                                 "    \"macVersion\": \"LORAWAN_1_0\" \n" +
                                 "}\n" +
                                 "\n"))
@@ -182,6 +192,9 @@ public class RestTests {
                                 fieldWithPath("keySpecs").description("JSON Object describing the key to be persisted"),
                                 fieldWithPath("keySpecs[].key").description("The key in plaintext"),
                                 fieldWithPath("keySpecs[].keyType").description("The type of key to be persisted. Allowed values: [AppKey1_0, AppKey1_1, NwkKey1_1]"),
+                                fieldWithPath("kek").description("JSON Object for the Key Encryption Key used for wrapping the root key(s) when interfacing with AS or NS as specified in LoRaWAN Backend Interfaces Specification"),
+                                fieldWithPath("kek.kekLabel").description("KEKLabel as specified in Backend Interfaces"),
+                                fieldWithPath("kek.aesKey").description("Key used for wrapping operation as specified in RFC 3394. Allowed key sizes [128, 192, 256]"),
                                 fieldWithPath("macVersion").description("MAC Version of the LoRaWAN Protocol which the end-device implements. Allowed values: [LORAWAN_1_0, LORAWAN_1_0_2, LORAWAN_1_0_3, LORAWAN_1_0_4, LORAWAN_1_1]")
                         ),
                         responseFields(
@@ -267,6 +280,8 @@ public class RestTests {
                                 fieldWithPath("sessionStatus.usedDevNonces").description("A list of all DevNonces used for a device, when registered under the current Join Server"),
                                 fieldWithPath("sessionStatus.usedJoinNonces").description("A list of all JoinNonces used for the Join Server"),
                                 fieldWithPath("sessionStatus.state").description("State of the current device"),
+                                fieldWithPath("isKekEnabled").description("Boolean value indicating whether Key Wrapping is enabled when interfacing with NS or AS"),
+                                fieldWithPath("kekLabel").description("Common label between JS and NS or AS to identify the Key to wrap root key(s) or session keys with"),
                                 fieldWithPath("owner.email").description("Owner email"),
                                 fieldWithPath("owner.firstName").description("Owner first name"),
                                 fieldWithPath("owner.lastName").description("Owner last name"),
@@ -432,6 +447,7 @@ public class RestTests {
         if (optionalDevice.isEmpty()) {
             deviceKeyHandler.init(
                     new KeySpec("0000000000000302", "00000000000000000000000706050407", KeyType.AppKey1_0),
+                    null,
                     "My_Test_Password",
                     "Credential2",
                     user,

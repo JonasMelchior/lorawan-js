@@ -161,6 +161,7 @@ public class AppSKeyReqTests {
         if (optionalDevice.isEmpty()) {
             deviceKeyHandler.init(
                     new KeySpec("0000000000000301", "00000000000000000000000706050407", KeyType.AppKey1_0),
+                    null,
                     "My_Test_Password1",
                     "Credential1",
                     user,

@@ -82,33 +82,37 @@ public class DeviceKeyHandler {
     }
 
     // Used to initialize device and corresponding key with new credential
-    public Pair<Boolean, String> init(KeySpec keySpec, String password, String credentialIdentifier, User user, Boolean exposed, MACVersion macVersion) {
+    public Pair<Boolean, String> init(KeySpec rootKeySpec, KeySpec kek, String password, String credentialIdentifier, User user, Boolean exposed, MACVersion macVersion) {
         // No need to derive lifetime keys, since more than 1 KeySpec is passed in case of LoRaWAN 1.1 when initializing
-        if (deviceService.findByDevEUI(keySpec.getDevEUI()).isPresent()) {
-            return new Pair<>(false, "Device with DevEUI: " + keySpec.getDevEUI() + " already exists");
+        if (deviceService.findByDevEUI(rootKeySpec.getIdentifier()).isPresent()) {
+            return new Pair<>(false, "Device with DevEUI: " + rootKeySpec.getIdentifier() + " already exists");
         }
-        boolean validated = validateKeySpecs(new ArrayList<>(List.of(keySpec)), macVersion);
+        boolean validated = validateKeySpecs(new ArrayList<>(List.of(rootKeySpec)), kek, macVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on MAC Version have been specified");
         }
 
         try {
-            this.keyHandler.storeRootKey(keySpec, credentialIdentifier, password, user);
+            this.keyHandler.storeRootKey(rootKeySpec, credentialIdentifier, password, user);
+            if (kek != null) {
+                // Using identifier (devEUI) of rootKeySpec since there is no guarantee, that the KEK Label (identifier of KeySpec kek) is unique
+                this.keyHandler.storeKek(kek.getKey(), rootKeySpec.getIdentifier());
+            }
         } catch (RootKeyPersistenceException e) {
             return new Pair<>(false, "Root key couldn't be persisted. An error occurred: " + e.getMessage());
         } catch (CredentialPersistenceException e) {
             return new Pair<>(false, "An error occured when persisting credential: " + e.getMessage());
         }
 
-        persistDevice(keySpec, exposed, user, macVersion);
+        persistDevice(rootKeySpec, kek, exposed, user, macVersion);
 
-        return new Pair<>(true, "Root key stored successfully for device " + keySpec.getDevEUI());
+        return new Pair<>(true, "Root key stored successfully for device " + rootKeySpec.getIdentifier());
     }
 
     // Used to initialize devices and corresponding keys with new credential
     // This can take a long time, if storing many keys why we need to initialize a job in the database if keySpecs > 100
-    public Pair<Boolean, String> init(List<KeySpec> keySpecs, String password, String credentialIdentifier, User user, Boolean exposed, MACVersion macVersion) {
-        boolean validated = validateKeySpecs(keySpecs, macVersion);
+    public Pair<Boolean, String> init(List<KeySpec> rootKeySpecs, KeySpec kek, String password, String credentialIdentifier, User user, Boolean exposed, MACVersion macVersion) {
+        boolean validated = validateKeySpecs(rootKeySpecs, kek, macVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on MAC Version have been specified");
 
@@ -116,51 +120,57 @@ public class DeviceKeyHandler {
 
         RunningJob runningJob = null;
         boolean jobInitialized = false;
-        if (keySpecs.size() > 100) {
+        if (rootKeySpecs.size() > 100) {
             jobInitialized = true;
-            runningJob = initRunningJob(keySpecs, user, JobType.REGISTER);
+            runningJob = initRunningJob(rootKeySpecs, user, JobType.REGISTER);
         }
 
         try {
-            this.keyHandler.storeRootKeys(keySpecs, credentialIdentifier, password, user);
+            this.keyHandler.storeRootKeys(rootKeySpecs, credentialIdentifier, password, user);
+            if (kek != null) {
+                this.keyHandler.storeKeks(kek.getKey(), rootKeySpecs.stream().map(KeySpec::getIdentifier).toList());
+            }
         } catch (RootKeyPersistenceException e) {
             return new Pair<>(false, "Root keys couldn't be persisted. An error occurred: " + e.getMessage());
         } catch (CredentialPersistenceException e) {
             return new Pair<>(false, "An error occured when persisting credential: " + e.getMessage());
         }
 
-        persistDevices(keySpecs, exposed, user, macVersion);
+        persistDevices(rootKeySpecs, kek, exposed, user, macVersion);
 
         if (jobInitialized) {
             jobService.delete(runningJob);
         }
 
-        return new Pair<>(true, "Root keys successfully stored for " + keySpecs.size() + " devices");
+        return new Pair<>(true, "Root keys successfully stored for " + rootKeySpecs.size() + " devices");
     }
 
     // Used to initialize device and corresponding key with existing credential
-    public Pair<Boolean, String> init(KeySpec keySpec, KeyCredential keyCredential, User user, Boolean exposed, MACVersion macVersion) {
+    public Pair<Boolean, String> init(KeySpec rootKeySpec, KeySpec kek, KeyCredential keyCredential, User user, Boolean exposed, MACVersion macVersion) {
         // No need to derive lifetime keys, since more than 1 KeySpec is passed in case of LoRaWAN 1.1 when initializing
-        boolean validated = validateKeySpecs(new ArrayList<>(List.of(keySpec)), macVersion);
+        boolean validated = validateKeySpecs(new ArrayList<>(List.of(rootKeySpec)), kek, macVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on MAC Version have been specified");
         }
 
         try {
-            this.keyHandler.storeRootKey(keySpec, keyCredential, user);
+            this.keyHandler.storeRootKey(rootKeySpec, keyCredential, user);
+            if (kek != null) {
+                this.keyHandler.storeKek(kek.getKey(), rootKeySpec.getIdentifier());
+            }
         } catch (RootKeyPersistenceException e) {
             return new Pair<>(false, "Root key couldn't be persisted. An error occurred: " + e.getMessage());
         }
 
-        persistDevice(keySpec, exposed, user, macVersion);
+        persistDevice(rootKeySpec, kek, exposed, user, macVersion);
 
-        return new Pair<>(true, "Root key stored successfully for device " + keySpec.getDevEUI());
+        return new Pair<>(true, "Root key stored successfully for device " + rootKeySpec.getIdentifier());
     }
 
     // Used to initialize devices and corresponding keys with existing credential
     // This can take a long time, if storing many keys why we need to initialize a job in the database if keySpecs > 100
-    public Pair<Boolean, String> init(List<KeySpec> keySpecs, KeyCredential keyCredential, User user, Boolean exposed, MACVersion macVersion) {
-        boolean validated = validateKeySpecs(keySpecs, macVersion);
+    public Pair<Boolean, String> init(List<KeySpec> rootKeySpecs, KeySpec kek, KeyCredential keyCredential, User user, Boolean exposed, MACVersion macVersion) {
+        boolean validated = validateKeySpecs(rootKeySpecs, kek, macVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on MAC Version have been specified");
 
@@ -168,30 +178,33 @@ public class DeviceKeyHandler {
 
         RunningJob runningJob = null;
         boolean jobInitialized = false;
-        if (keySpecs.size() > 100) {
+        if (rootKeySpecs.size() > 100) {
             jobInitialized = true;
-            runningJob = initRunningJob(keySpecs, user, JobType.REGISTER);
+            runningJob = initRunningJob(rootKeySpecs, user, JobType.REGISTER);
         }
 
         try {
-            this.keyHandler.storeRootKeys(keySpecs, keyCredential, user);
+            this.keyHandler.storeRootKeys(rootKeySpecs, keyCredential, user);
+            if (kek != null) {
+                this.keyHandler.storeKeks(kek.getKey(), rootKeySpecs.stream().map(KeySpec::getIdentifier).toList());
+            }
         } catch (RootKeyPersistenceException e) {
             return new Pair<>(false, "Root keys couldn't be persisted. An error occurred: " + e.getMessage());
         }
 
-        persistDevices(keySpecs, exposed, user, macVersion);
+        persistDevices(rootKeySpecs, kek, exposed, user, macVersion);
 
         if (jobInitialized) {
             jobService.delete(runningJob);
         }
 
-        return new Pair<>(true, "Root keys successfully stored for " + keySpecs.size() + " devices");
+        return new Pair<>(true, "Root keys successfully stored for " + rootKeySpecs.size() + " devices");
     }
 
-    private Boolean validateKeySpecs(List<KeySpec> keySpecs, MACVersion macVersion) {
+    private Boolean validateKeySpecs(List<KeySpec> keySpecs, KeySpec kek, MACVersion macVersion) {
         // Filter the list based on devEUI and create the Map
         Map<String, List<KeySpec>> filteredMap = keySpecs.stream()
-                .collect(Collectors.groupingBy(KeySpec::getDevEUI));
+                .collect(Collectors.groupingBy(KeySpec::getIdentifier));
 
         for (Map.Entry<String, List<KeySpec>> entry : filteredMap.entrySet()) {
             if (!isHexadecimal(entry.getKey(), 16)) {
@@ -233,6 +246,12 @@ public class DeviceKeyHandler {
             }
         }
 
+        if (kek != null) {
+            return isHexadecimal(kek.getKey(), 32) ||
+                    isHexadecimal(kek.getKey(), 48) ||
+                    isHexadecimal(kek.getKey(), 64);
+        }
+
         return true;
     }
 
@@ -249,49 +268,67 @@ public class DeviceKeyHandler {
         return input.matches(hexPattern);
     }
 
-    private void persistDevice(KeySpec keySpec, Boolean exposed, User owner, MACVersion macVersion) {
+    private void persistDevice(KeySpec rootKeySpec, KeySpec kek, Boolean exposed, User owner, MACVersion macVersion) {
         SessionStatus initSessionStatus = SessionStatus.sessionStatusInit();
-        initSessionStatus.setDevEUI(keySpec.getDevEUI());
+        initSessionStatus.setDevEUI(rootKeySpec.getIdentifier());
 
         Device device = new Device(
-                keySpec.getDevEUI(),
+                rootKeySpec.getIdentifier(),
                 exposed,
                 initSessionStatus,
                 owner,
                 macVersion
         );
 
+        if (kek != null) {
+            device.setKekEnabled(true);
+            device.setKekLabel(kek.getIdentifier());
+        }
+
         this.deviceService.save(device, false);
     }
 
-    private void persistDevices(List<KeySpec> keySpecs, Boolean exposed, User owner, MACVersion macVersion) {
+    private void persistDevices(List<KeySpec> keySpecs, KeySpec kek, Boolean exposed, User owner, MACVersion macVersion) {
         List<Device> devices = new ArrayList<>();
 
         // distinct() because keySpecs might include duplicate DevEUIs in case of LoRaWAN 1.1 devices because of two root keys.
         for (KeySpec keySpec : keySpecs.stream().distinct().toList()) {
             SessionStatus initSessionStatus = SessionStatus.sessionStatusInit();
-            initSessionStatus.setDevEUI(keySpec.getDevEUI());
-            devices.add(new Device(
-                    keySpec.getDevEUI(),
+            initSessionStatus.setDevEUI(keySpec.getIdentifier());
+
+            Device device = new Device(
+                    keySpec.getIdentifier(),
                     exposed,
                     initSessionStatus,
                     owner,
                     macVersion
-            ));
+            );
+
+            if (kek != null) {
+                device.setKekEnabled(true);
+                device.setKekLabel(kek.getIdentifier());
+            }
+
+            devices.add(device);
         }
 
         this.deviceService.saveAll(devices, false);
     }
 
     // Only relevant for toMACVersion LoRaWAN 1.0.x
-    public Pair<Boolean, String> update(String oldDevEUI, Device updatedDevice, KeySpec keySpec, MACVersion fromMACVersion, MACVersion toMACVersion) {
-        boolean validated = validateKeySpecs(new ArrayList<>(List.of(keySpec)), toMACVersion);
+    public Pair<Boolean, String> update(String oldDevEUI, Device updatedDevice, KeySpec rootKeySpec, KeySpec kek, MACVersion fromMACVersion, MACVersion toMACVersion) {
+        boolean validated = validateKeySpecs(new ArrayList<>(List.of(rootKeySpec)), kek, toMACVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on provided MAC Version");
         }
 
         try {
-            keyHandler.updateRootKey(oldDevEUI, keySpec, fromMACVersion, toMACVersion);
+            keyHandler.updateRootKey(oldDevEUI, rootKeySpec, fromMACVersion, toMACVersion);
+            if (kek != null) {
+                updatedDevice.setKekEnabled(true);
+                updatedDevice.setKekLabel(kek.getIdentifier());
+                this.keyHandler.updateKek(kek.getKey(), oldDevEUI, updatedDevice.getDevEUI());
+            }
         } catch (RootKeyPersistenceException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
             return new Pair<>(false, "Root key couldn't be updated. An error occurred");
@@ -303,18 +340,23 @@ public class DeviceKeyHandler {
         }
 
         deviceService.save(updatedDevice, true);
-        return new Pair<>(true, "Device and root keys successfully updated for device " + keySpec.getDevEUI());
+        return new Pair<>(true, "Device and root keys successfully updated for device " + rootKeySpec.getIdentifier());
     }
 
     // Only relevant for toMACVersion LoRaWAN 1.1
-    public Pair<Boolean, String> update(String oldDevEUI, Device updatedDevice, List<KeySpec> keySpecs, MACVersion fromMACVersion, MACVersion toMACVersion) {
-        boolean validated = validateKeySpecs(keySpecs, toMACVersion);
+    public Pair<Boolean, String> update(String oldDevEUI, Device updatedDevice, List<KeySpec> keySpecs, KeySpec kek, MACVersion fromMACVersion, MACVersion toMACVersion) {
+        boolean validated = validateKeySpecs(keySpecs, kek, toMACVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on provided MAC Version");
         }
 
         try {
             keyHandler.updateRootKeys(oldDevEUI, keySpecs, fromMACVersion, toMACVersion);
+            if (kek != null) {
+                updatedDevice.setKekEnabled(true);
+                updatedDevice.setKekLabel(kek.getIdentifier());
+                this.keyHandler.updateKek(kek.getKey(), oldDevEUI, updatedDevice.getDevEUI());
+            }
         } catch (RootKeyPersistenceException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
             return new Pair<>(false, "Root key couldn't be updated. An error occurred");
@@ -330,9 +372,9 @@ public class DeviceKeyHandler {
     }
 
     // Only relevant for toMACVersion LoRaWAN 1.0.x
-    public Pair<Boolean, String> updateAuthorized(String oldDevEUI, Device updatedDevice, KeySpec keySpec, String password, MACVersion fromMACVersion, MACVersion toMACVersion) throws UpdateDeviceException, CredentialAuthenticationException {
+    public Pair<Boolean, String> updateAuthorized(String oldDevEUI, Device updatedDevice, KeySpec keySpec, KeySpec kek, String password, MACVersion fromMACVersion, MACVersion toMACVersion) throws UpdateDeviceException, CredentialAuthenticationException {
 
-        boolean validated = validateKeySpecs(new ArrayList<>(List.of(keySpec)), toMACVersion);
+        boolean validated = validateKeySpecs(new ArrayList<>(List.of(keySpec)), kek, toMACVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on provided MAC Version");
         }
@@ -351,6 +393,11 @@ public class DeviceKeyHandler {
 
         try {
             keyHandler.updateRootKey(oldDevEUI, keySpec, fromMACVersion, toMACVersion);
+            if (kek != null) {
+                updatedDevice.setKekEnabled(true);
+                updatedDevice.setKekLabel(kek.getIdentifier());
+                this.keyHandler.updateKek(kek.getKey(), oldDevEUI, updatedDevice.getDevEUI());
+            }
         } catch (RootKeyPersistenceException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
             return new Pair<>(false, "Root key couldn't be updated. An error occurred: " + e.getMessage());
@@ -362,12 +409,12 @@ public class DeviceKeyHandler {
         }
 
         deviceService.save(updatedDevice, true);
-        return new Pair<>(true, "Device and root keys successfully updated for device " + keySpec.getDevEUI());
+        return new Pair<>(true, "Device and root keys successfully updated for device " + keySpec.getIdentifier());
     }
 
     // Only relevant for toMACVersion LoRaWAN 1.1
-    public Pair<Boolean, String> updateAuthorized(String oldDevEUI, Device updatedDevice, List<KeySpec> keySpecs, String password, MACVersion fromMACVersion, MACVersion toMACVersion) throws UpdateDeviceException, CredentialAuthenticationException {
-        boolean validated = validateKeySpecs(keySpecs, toMACVersion);
+    public Pair<Boolean, String> updateAuthorized(String oldDevEUI, Device updatedDevice, List<KeySpec> keySpecs, KeySpec kek, String password, MACVersion fromMACVersion, MACVersion toMACVersion) throws UpdateDeviceException, CredentialAuthenticationException {
+        boolean validated = validateKeySpecs(keySpecs, kek, toMACVersion);
         if (!validated) {
             return new Pair<>(false, "Root key or devEUI couldn't be validated. Non-hex characters exist, incorrect length, or non-compatible key types depending on provided MAC Version");
         }
@@ -385,6 +432,11 @@ public class DeviceKeyHandler {
 
         try {
             keyHandler.updateRootKeys(oldDevEUI, keySpecs, fromMACVersion, toMACVersion);
+            if (kek != null) {
+                updatedDevice.setKekEnabled(true);
+                updatedDevice.setKekLabel(kek.getIdentifier());
+                this.keyHandler.updateKek(kek.getKey(), oldDevEUI, updatedDevice.getDevEUI());
+            }
         } catch (RootKeyPersistenceException | CertificateException | IOException | NoSuchAlgorithmException |
                  KeyStoreException e) {
             return new Pair<>(false, "Root keys couldn't be updated. An error occurred: " + e.getMessage());
@@ -425,6 +477,7 @@ public class DeviceKeyHandler {
 
         try {
             this.keyHandler.deleteKey(device);
+            this.keyHandler.deleteKek(device.getDevEUI());
             this.joinLogService.deleteAllByDev(device);
             this.appSKeyReqLogService.deleteAllByDev(device);
             this.deviceService.delete(device);
@@ -437,6 +490,7 @@ public class DeviceKeyHandler {
     public Pair<Boolean, String> delete(Device device) {
         try {
             this.keyHandler.deleteKey(device);
+            this.keyHandler.deleteKek(device.getDevEUI());
             this.joinLogService.deleteAllByDev(device);
             this.appSKeyReqLogService.deleteAllByDev(device);
             this.deviceService.delete(device);
@@ -449,6 +503,7 @@ public class DeviceKeyHandler {
     public Pair<Boolean, String> delete(List<Device> devices) {
         try {
             this.keyHandler.deleteKeys(devices);
+            this.keyHandler.deleteKeks(devices.stream().map(Device::getDevEUI).toList());
             this.joinLogService.deleteByDeviceIn(devices);
             this.appSKeyReqLogService.deleteByDeviceIn(devices);
             this.deviceService.deleteAll(devices);
@@ -587,7 +642,7 @@ public class DeviceKeyHandler {
                 LocalDateTime.now(),
                 user,
                 (int) keySpecs.stream()
-                        .map(KeySpec::getDevEUI)
+                        .map(KeySpec::getIdentifier)
                         .distinct()
                         .count()
         );
@@ -604,7 +659,7 @@ public class DeviceKeyHandler {
         keyHandler.setKek(kek);
     }
 
-    public Key getKek() {
-        return keyHandler.getKek();
+    public Key getKek(String devEUI) {
+        return keyHandler.getKek(devEUI);
     }
 }

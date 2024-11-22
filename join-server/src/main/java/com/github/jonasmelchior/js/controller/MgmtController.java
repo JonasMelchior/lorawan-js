@@ -10,6 +10,7 @@ import com.github.jonasmelchior.js.data.device.dto.UpdateDeviceDTO;
 import com.github.jonasmelchior.js.data.http.Res;
 import com.github.jonasmelchior.js.data.keys.KeyCredential;
 import com.github.jonasmelchior.js.data.keys.KeySpec;
+import com.github.jonasmelchior.js.data.keys.KeyType;
 import com.github.jonasmelchior.js.data.lrwan.MACVersion;
 import com.github.jonasmelchior.js.data.user.User;
 import com.github.jonasmelchior.js.json.JsonPage;
@@ -57,8 +58,16 @@ public class MgmtController {
     @ResponseBody
     @PostMapping("/devices")
     public ResponseEntity createDevice(@RequestBody CreateDeviceDTO createDeviceDTO) {
-
         createDeviceDTO.setDevEUI(createDeviceDTO.getDevEUI().toUpperCase());
+
+        KeySpec kek = null;
+        if (createDeviceDTO.getKek() != null) {
+            kek = new KeySpec(
+                    createDeviceDTO.getKek().getKekLabel(),
+                    createDeviceDTO.getKek().getAesKey(),
+                    KeyType.KEK
+            );
+        }
 
         Optional<User> user = userService.findByEmail(SecurityContextHolder.getContext().getAuthentication().getName());
         if (user.isEmpty()) {
@@ -90,7 +99,7 @@ public class MgmtController {
 
             for (KeySpec keySpec : createDeviceDTO.getKeySpecs()) {
                 // Set DevEUI of KeySpec object, since it isn't apart of the DTO object (see JsonIgnore annotation)
-                keySpec.setDevEUI(createDeviceDTO.getDevEUI().toUpperCase());
+                keySpec.setIdentifier(createDeviceDTO.getDevEUI().toUpperCase());
                 keySpec.setKey(keySpec.getKey().toUpperCase());
             }
 
@@ -100,6 +109,7 @@ public class MgmtController {
             if (existingCredential != null) {
                 result = deviceKeyHandler.init(
                         createDeviceDTO.getKeySpecs(),
+                        kek,
                         existingCredential,
                         user.get(),
                         false,
@@ -110,6 +120,7 @@ public class MgmtController {
             else {
                 result = deviceKeyHandler.init(
                         createDeviceDTO.getKeySpecs(),
+                        kek,
                         createDeviceDTO.getCredential().getPassword(),
                         createDeviceDTO.getCredential().getCredentialID(),
                         user.get(),
@@ -145,6 +156,15 @@ public class MgmtController {
                                        @RequestHeader("Credential") String password) {
         devEUI = devEUI.toUpperCase();
 
+        KeySpec kek = null;
+        if (updateDeviceDTO.getKek() != null) {
+            kek = new KeySpec(
+                    updateDeviceDTO.getKek().getKekLabel(),
+                    updateDeviceDTO.getKek().getAesKey(),
+                    KeyType.KEK
+            );
+        }
+
         Pair<ResponseEntity<?>, Device> userDeviceAuthenticationResult = authenticateDeviceOwner(devEUI);
         if (userDeviceAuthenticationResult.a != null) {
             return userDeviceAuthenticationResult.a;
@@ -174,7 +194,7 @@ public class MgmtController {
 
         for (KeySpec keySpec : updateDeviceDTO.getKeySpecs()) {
             // Set DevEUI of KeySpec object, since it isn't apart of the DTO object (see JsonIgnore annotation)
-            keySpec.setDevEUI(updateDeviceDTO.getDevEUI().toUpperCase());
+            keySpec.setIdentifier(updateDeviceDTO.getDevEUI().toUpperCase());
             keySpec.setKey(keySpec.getKey().toUpperCase());
         }
 
@@ -186,6 +206,7 @@ public class MgmtController {
                         devEUI,
                         userDeviceAuthenticationResult.b,
                         updateDeviceDTO.getKeySpecs().get(0),
+                        kek,
                         password,
                         fromMAcVersion,
                         updateDeviceDTO.getMacVersion()
@@ -196,6 +217,7 @@ public class MgmtController {
                         devEUI,
                         userDeviceAuthenticationResult.b,
                         updateDeviceDTO.getKeySpecs(),
+                        kek,
                         password,
                         fromMAcVersion,
                         updateDeviceDTO.getMacVersion()

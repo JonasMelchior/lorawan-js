@@ -159,6 +159,7 @@ public class DevJoinServer implements CommandLineRunner {
         if (deviceService.findByDevEUI("0000000000000301").isEmpty()) {
             Pair<Boolean, String> result = deviceKeyHandler.init(
                     new KeySpec("0000000000000301", "00000000000000000000000706050407", KeyType.AppKey1_0),
+                    null,
                     "My_Test_Password1",
                     "Credential1",
                     user,
@@ -171,6 +172,7 @@ public class DevJoinServer implements CommandLineRunner {
         if (deviceService.findByDevEUI("1D4A7D0000927185").isEmpty()) {
             Pair<Boolean, String> result = deviceKeyHandler.init(
                     new KeySpec("1D4A7D0000927185", "2F6DE60C81548C210C50C4B408E68162", KeyType.AppKey1_0),
+                    null,
                     "My_Test_Password2",
                     "Credential2",
                     user1,

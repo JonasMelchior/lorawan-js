@@ -307,6 +307,42 @@ public class DeviceView extends VerticalLayout {
             rootKeysLayout.add(appKeyField, nwkKeyField);
         }
 
+        RadioButtonGroup<String> kekEnabledButtonGroup = new RadioButtonGroup<>("KEK");
+        kekEnabledButtonGroup.setItems("Wrap keys when under transportation", "No wrapping");
+
+        TextField kekLabelField = new TextField("KEK Label");
+        PasswordField wrappingKeyField = new PasswordField("Wrapping Key");
+        kekLabelField.setWidth("400px");
+        wrappingKeyField.setWidth("400px");
+        kekLabelField.setRequired(true);
+        wrappingKeyField.setRequired(true);
+
+        kekEnabledButtonGroup.setReadOnly(true);
+        kekLabelField.setReadOnly(true);
+        wrappingKeyField.setReadOnly(true);
+
+        VerticalLayout kekLayout = new VerticalLayout(kekEnabledButtonGroup);
+        kekLayout.setPadding(false);
+
+        if (device.getKekEnabled()) {
+            kekEnabledButtonGroup.setValue("Wrap keys when under transportation");
+            kekLayout.add(kekLabelField, wrappingKeyField);
+            kekLabelField.setValue(device.getKekLabel());
+            wrappingKeyField.setValue(Hex.encodeHexString(deviceKeyHandler.getKek(device.getDevEUI()).getEncoded()).toUpperCase());
+        }
+        else {
+            kekEnabledButtonGroup.setValue("No wrapping");
+        }
+
+        kekEnabledButtonGroup.addValueChangeListener( change -> {
+            if (change.getValue().equals("Wrap keys when under transportation")) {
+                kekLayout.add(kekLabelField, wrappingKeyField);
+            }
+            else if (change.getValue().equals("No wrapping")) {
+                kekLayout.remove(kekLabelField, wrappingKeyField);
+            }
+        });
+
         macVersionButtonGroup.addValueChangeListener( change -> {
             if (change.getValue().equals(MACVersion.LORAWAN_1_0)) {
                 rootKeysLayout.remove(nwkKeyField);
@@ -323,6 +359,9 @@ public class DeviceView extends VerticalLayout {
             devEUIField.setReadOnly(false);
             appKeyField.setReadOnly(false);
             nwkKeyField.setReadOnly(false);
+            kekEnabledButtonGroup.setReadOnly(false);
+            kekLabelField.setReadOnly(false);
+            wrappingKeyField.setReadOnly(false);
         });
 
         editControls.addCancelListener( cancel -> {
@@ -330,6 +369,9 @@ public class DeviceView extends VerticalLayout {
             devEUIField.setReadOnly(true);
             appKeyField.setReadOnly(true);
             nwkKeyField.setReadOnly(true);
+            kekEnabledButtonGroup.setReadOnly(true);
+            kekLabelField.setReadOnly(true);
+            wrappingKeyField.setReadOnly(true);
         });
 
         //TODO : implement
@@ -339,6 +381,18 @@ public class DeviceView extends VerticalLayout {
             device.setDevEUI(devEUIField.getValue());
             device.setMacVersion(macVersionButtonGroup.getValue());
             Pair<Boolean, String> result = null;
+
+            KeySpec kek = null;
+            if (kekEnabledButtonGroup.getValue().equals("Wrap keys when under transportation")) {
+                kek = new KeySpec(
+                        kekLabelField.getValue(),
+                        wrappingKeyField.getValue(),
+                        KeyType.KEK
+                );
+            }
+            else {
+                device.setKekEnabled(false);
+            }
             if (macVersionButtonGroup.getValue().equals(MACVersion.LORAWAN_1_0) ||
                     macVersionButtonGroup.getValue().equals(MACVersion.LORAWAN_1_0_1) ||
                     macVersionButtonGroup.getValue().equals(MACVersion.LORAWAN_1_0_2) ||
@@ -352,6 +406,7 @@ public class DeviceView extends VerticalLayout {
                                 appKeyField.getValue().toUpperCase(),
                                 KeyType.AppKey1_0
                         ),
+                        kek,
                         fromMACVersion,
                         device.getMacVersion()
                 );
@@ -372,6 +427,7 @@ public class DeviceView extends VerticalLayout {
                                         KeyType.NwkKey1_1
                                 )
                         )),
+                        kek,
                         device.getMacVersion(),
                         macVersionButtonGroup.getValue()
                 );
@@ -384,12 +440,13 @@ public class DeviceView extends VerticalLayout {
                 devEUIField.setReadOnly(true);
                 appKeyField.setReadOnly(true);
                 nwkKeyField.setReadOnly(true);
+                kekEnabledButtonGroup.setReadOnly(true);
+                kekLabelField.setReadOnly(true);
+                wrappingKeyField.setReadOnly(true);
             }
             else {
                 new ErrorNotification(result.b).open();
             }
-
-
         });
 
         Button deleteDeviceButton = new Button("Delete Device", new Icon(VaadinIcon.TRASH));
@@ -399,7 +456,7 @@ public class DeviceView extends VerticalLayout {
         configurationLayout = new VerticalLayout(
                 macVersionButtonGroup,
                 devEUIField,
-                rootKeysLayout,
+                kekLayout,
                 editControls,
                 deleteDeviceButton
         );

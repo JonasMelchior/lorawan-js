@@ -107,6 +107,7 @@ public class DeviceKeyHandlerTests {
                         testAppKey,
                         KeyType.AppKey1_0
                 ),
+                null,
                 "12345",
                 testCredential,
                 user,
@@ -149,6 +150,7 @@ public class DeviceKeyHandlerTests {
                         new KeySpec(testDevEUI, testAppKey, KeyType.AppKey1_1),
                         new KeySpec(testDevEUI, testNwkKey, KeyType.NwkKey1_1)
                 )),
+                null,
                 "12345",
                 testCredential,
                 user,
@@ -194,6 +196,7 @@ public class DeviceKeyHandlerTests {
                         new KeySpec(testDevEUI1, testAppKey1, KeyType.AppKey1_0),
                         new KeySpec(testDevEUI2, testAppKey2, KeyType.AppKey1_0)
                 )),
+                null,
                 "12345",
                 testCredential,
                 user,
@@ -246,6 +249,7 @@ public class DeviceKeyHandlerTests {
                         new KeySpec(testDevEUI2, testAppKey2, KeyType.AppKey1_1),
                         new KeySpec(testDevEUI2, testNwkKey2, KeyType.NwkKey1_1)
                 )),
+                null,
                 "12345",
                 testCredential,
                 user,
@@ -301,6 +305,7 @@ public class DeviceKeyHandlerTests {
                         testAppKey1,
                         KeyType.AppKey1_0
                 ),
+                null,
                 "My_Test_Password2",
                 testCredentialUpdate,
                 user,
@@ -315,6 +320,7 @@ public class DeviceKeyHandlerTests {
                         testAppKey2,
                         KeyType.AppKey1_0
                 ),
+                null,
                 keyCredential.get(),
                 user,
                 false,
@@ -357,6 +363,7 @@ public class DeviceKeyHandlerTests {
                         testAppKey,
                         KeyType.AppKey1_0
                 ),
+                null,
                 "12345",
                 testCredential,
                 user,

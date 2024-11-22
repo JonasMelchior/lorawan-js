@@ -8,12 +8,21 @@ import java.util.List;
 public class UpdateDeviceDTO {
     private String devEUI;
     private List<KeySpec> keySpecs;
+    private Kek kek;
     private MACVersion macVersion;
 
     public UpdateDeviceDTO(String devEUI, List<KeySpec> keySpecs, MACVersion macVersion) {
         this.devEUI = devEUI;
         this.keySpecs = keySpecs;
         this.macVersion = macVersion;
+    }
+
+    public Kek getKek() {
+        return kek;
+    }
+
+    public void setKek(Kek kek) {
+        this.kek = kek;
     }
 
     public String getDevEUI() {

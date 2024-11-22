@@ -68,8 +68,8 @@ public class JoinProcTests {
         JoinProcessor joinProcessor = new JoinProcessor(deviceService, keyCredentialService, devIdService, joinLogService, jobService);
         JoinAns joinAns = joinProcessor.processJoinReq(joinReqJson);
 
-        Assert.isTrue(joinAns.getAppSKey().getaESKey(deviceKeyHandler.getKek()).equalsIgnoreCase("14BE5C9908B2ED7C4F3206517ED5B6CA"), "AppSKey derivation not correct");
-        Assert.isTrue(joinAns.getNwkSKey().getaESKey(deviceKeyHandler.getKek()).equalsIgnoreCase("9D8108941A9C02B3E20D5B69104995A5"), "NwkSKey derivation not correct");
+        Assert.isTrue(joinAns.getAppSKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).equalsIgnoreCase("14BE5C9908B2ED7C4F3206517ED5B6CA"), "AppSKey derivation not correct");
+        Assert.isTrue(joinAns.getNwkSKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).equalsIgnoreCase("9D8108941A9C02B3E20D5B69104995A5"), "NwkSKey derivation not correct");
 
         Assert.isTrue(Hex.encodeHexString(deviceKeyHandler.getAppSKey("0000000000000301").getEncoded()).equalsIgnoreCase("14BE5C9908B2ED7C4F3206517ED5B6CA"), "AppSKey not stored correctly in key store");
         Assert.isTrue(Hex.encodeHexString(deviceKeyHandler.getNwkSKey("0000000000000301").getEncoded()).equalsIgnoreCase("9D8108941A9C02B3E20D5B69104995A5"), "NwkSKey not stored correctly in key store");
@@ -99,10 +99,10 @@ public class JoinProcTests {
         JoinProcessor joinProcessor = new JoinProcessor(deviceService, keyCredentialService, devIdService, joinLogService, jobService);
         JoinAns joinAns = joinProcessor.processJoinReq(joinReqJson);
 
-        Assert.isTrue(joinAns.getAppSKey().getaESKey(deviceKeyHandler.getKek()).length() == 32, "AppSKey is not 16 bytes");
-        Assert.isTrue(joinAns.getfNwkSIntKey().getaESKey(deviceKeyHandler.getKek()).length() == 32, "FNwkSIntKey is not 16 bytes");
-        Assert.isTrue(joinAns.getsNwkSIntKey().getaESKey(deviceKeyHandler.getKek()).length() == 32, "SNwkSIntKey is not 16 bytes");
-        Assert.isTrue(joinAns.getNwkSEncKey().getaESKey(deviceKeyHandler.getKek()).length() == 32, "NwkSEncKey is not 16 bytes");
+        Assert.isTrue(joinAns.getAppSKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).length() == 32, "AppSKey is not 16 bytes");
+        Assert.isTrue(joinAns.getfNwkSIntKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).length() == 32, "FNwkSIntKey is not 16 bytes");
+        Assert.isTrue(joinAns.getsNwkSIntKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).length() == 32, "SNwkSIntKey is not 16 bytes");
+        Assert.isTrue(joinAns.getNwkSEncKey().getaESKey(deviceKeyHandler.getKek("0000000000000301")).length() == 32, "NwkSEncKey is not 16 bytes");
 
 
         Assert.isTrue(Hex.encodeHexString(deviceKeyHandler.getAppSKey("0000000000000301").getEncoded()).length() == 32, "AppSKey not of correct length from key store");

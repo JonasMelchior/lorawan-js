@@ -277,7 +277,6 @@ public class JoinProcessor {
             joinAns.setReceiverNSID(joinReq.getSenderNSID());
         }
         try {
-            Key kek = deviceKeyHandler.getKek();
             //Note: encryptPHYPayload functions can throw JoinReqFailed
             if (joinReq.getMACVersion().contains("1.0")) {
                 assert appKey != null;
@@ -285,8 +284,18 @@ public class JoinProcessor {
                         Hex.encodeHexString(appKey.getEncoded()),
                         joinAccMHDR
                 );
-                joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase(), kek));
-                joinAns.setNwkSKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSKey)).toUpperCase(), kek));
+
+                if (device.getKekEnabled()) {
+                    Key kek = deviceKeyHandler.getKek(joinReq.getDevEUI());
+                    String kekLabel = device.getKekLabel();
+
+                    joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase(), kekLabel, kek));
+                    joinAns.setNwkSKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSKey)).toUpperCase(), kekLabel, kek));
+                }
+                else {
+                    joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase()));
+                    joinAns.setNwkSKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSKey)).toUpperCase()));
+                }
 
                 List<KeySpec> keySpecs = new ArrayList<>(List.of(
                         new KeySpec(joinReq.getDevEUI(), Hex.encodeHexString(appSKey), KeyType.AppSKey),
@@ -308,10 +317,22 @@ public class JoinProcessor {
                         Hex.encodeHexString(deviceKeyHandler.getNwkKey1_1(joinReq.getDevEUI()).getEncoded()),
                         joinAccMHDR
                 );
-                joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase(), kek));
-                joinAns.setfNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(fNwkSIntKey)).toUpperCase(), kek));
-                joinAns.setsNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(sNwkSIntKey)).toUpperCase(), kek));
-                joinAns.setNwkSEncKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSEncKey)).toUpperCase(), kek));
+
+                if (device.getKekEnabled()) {
+                    Key kek = deviceKeyHandler.getKek(joinReq.getDevEUI());
+                    String kekLabel = device.getKekLabel();
+
+                    joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase(), kekLabel, kek));
+                    joinAns.setfNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(fNwkSIntKey)).toUpperCase(), kekLabel, kek));
+                    joinAns.setsNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(sNwkSIntKey)).toUpperCase(), kekLabel, kek));
+                    joinAns.setNwkSEncKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSEncKey)).toUpperCase(), kekLabel, kek));
+                }
+                else {
+                    joinAns.setAppSKey(new KeyEnvelope(new String(Hex.encodeHex(appSKey)).toUpperCase()));
+                    joinAns.setfNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(fNwkSIntKey)).toUpperCase()));
+                    joinAns.setsNwkSIntKey(new KeyEnvelope(new String(Hex.encodeHex(sNwkSIntKey)).toUpperCase()));
+                    joinAns.setNwkSEncKey(new KeyEnvelope(new String(Hex.encodeHex(nwkSEncKey)).toUpperCase()));
+                }
 
                 List<KeySpec> keySpecs = new ArrayList<>(List.of(
                         new KeySpec(joinReq.getDevEUI(), Hex.encodeHexString(appSKey), KeyType.AppSKey),
