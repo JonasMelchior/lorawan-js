@@ -10,8 +10,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <version>1.0-SNAPSHOT</version>
-    <groupId>com.github.jonasmelchior</groupId>
+    <version>0.1.0</version>
+    <groupId>org.cibicom.iot.js</groupId>
     <artifactId>join-server</artifactId>
 
     <properties>
@@ -20,6 +20,7 @@
         <snippetsDirectory>${project.build.directory}/generated-snippets</snippetsDirectory>
         <asciidoctor-plugin.version>2.2.6</asciidoctor-plugin.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -112,6 +113,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
+            <version>3.1.11</version>
         </dependency>
 
         <dependency>
@@ -167,6 +169,18 @@
             <version>2.0.11</version>
             <scope>test</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>javax.mail</artifactId>
+            <version>1.6.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.chirpstack</groupId>
+            <artifactId>chirpstack-api</artifactId>
+            <version>4.14.1</version>
+        </dependency>
     </dependencies>
 
     <profiles>
@@ -183,7 +197,7 @@
                         <configuration>
                             <executable>true</executable>
                             <layout>ZIP</layout>
-                            <mainClass>com.github.jonasmelchior.js.JoinServer</mainClass>
+                            <mainClass>org.cibicom.iot.js.JoinServer</mainClass>
                             <excludeGroupIds>org.bouncycastle</excludeGroupIds>
                         </configuration>
                         <executions>

@@ -1,5 +1,5 @@
 = Join Server REST Service
-Jonas Jensen;
+Cibicom;
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
@@ -108,8 +108,8 @@ Get device with specified DevEUI for authorized user
 include::{snippets}/get-device/http-request.adoc[]
 
 ==== Response example
-include::{snippets}/get-devices/http-response.adoc[]
-include::{snippets}/get-devices/response-fields.adoc[]
+include::{snippets}/get-device/http-response.adoc[]
+include::{snippets}/get-device/response-fields.adoc[]
 
 ==== CURL request
 include::{snippets}/get-devices/curl-request.adoc[]

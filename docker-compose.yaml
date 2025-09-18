@@ -25,7 +25,7 @@ services:
       - js-net
 
   join-server-ui:
-    image: jonasmelchior/join-server-ui:0.1.0
+    image: jonasmelchior/join-server-ui:0.1.1
     container_name: join-server-ui
     volumes:
       - keystore-data:/root/.lrwan_js
@@ -36,7 +36,6 @@ services:
     networks:
       - js-net
 
-
 volumes:
   keystore-data:
   postgresqldata:
@@ -44,3 +43,4 @@ volumes:
 networks:
   js-net:
     driver: bridge
+

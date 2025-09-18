@@ -1,25 +1,10 @@
 # Stand-alone LoRaWAN Join Server
 
-This is the implementation of a LoRaWAN Join Server created as part of my bachelor's thesis. 
+This is the implementation of a LoRaWAN Join Server.
 The solution utilizes key stores from Bouncy Castle to secure the root key(s) and derived session keys in a cost-effective yet secure manner for large scale IoT projects.
 
-That does not mean the overall solution is secure, and this should not be used in production since it is still experimental.
 
-## Quickstart
-
-Run the Join Server using Docker Compose. 
-
-```
-sudo docker-compose up -d
-```
-
-This will create and run three containers on the host: 
-
-1. The Join Server on port 7090. Check out the documentation for the REST service on 'localhost:7090/docs'
-2. The UI for the Join Server on port 8080
-3. A PostgreSQL database 
-
-#### Default login: admin@gmail/admin
+#### Default login: admin/admin
 
 ### Test the Join Server out
 
@@ -63,7 +48,7 @@ wget https://repo1.maven.org/maven2/org/bouncycastle/bc-fips/1.0.2.4/bc-fips-1.0
 
 Create the appropriate application-<profile>.properties files and subsequent database setup.
 
-To create a production build, call `mvn clean package -Pproduction -Dspring.profiles.active=js`.
+To create a production build, call `mvn clean package -Pproduction -Dspring.profiles.active=dev`.
 This will build JAR files for the Join Server and UI, ready to be deployed. The files can be found in the `target` folders in the different modules after the build has completed.
 
 Once the JAR is build, you can run the application using the commands below.
@@ -77,11 +62,17 @@ java -Dspring.profiles.active=js \
 -jar lorawan-join-server-1.0.jar
 ```
 
-### Specify Key Store Paths
+### Configure
 
 You can also specify in what directories the different Key Stores should reside in a .yaml file with the format as specified below.
-Note, that the paths specify a directory, i.e. the directory and not the Key Store file itself. The paths can be equal of different.
+Note, that the paths specify a directory, i.e. the directory and not the Key Store file itself. The paths can be equal of different. 
+Also, you can specify other configuration details such as the master password to be sued for the key stores and details of the initial 
+admin user.
 ```
+master_pwd: <keystores_pwd>
+admin:
+  user: <email of initial admin user>
+  pwd: <BCrypt hash of password>
 storage:
   credentials: <path1>
   rkeys: <path2>

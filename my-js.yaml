@@ -1,0 +1,11 @@
+master_pwd: 0x3Q3P@?g[3dZhHf
+admin:
+  user: super-js
+  # js_password
+  pwd: $2y$12$L/a/LHMNEA2JFhOOVCw89uXRDdBfds2WpQowwJOkN4UKPEQSb3kTi
+storage:
+  credentials: js
+  rkeys: js
+  skeys: js
+  keks: js
+
