@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Component;
 
-import javax.swing.text.html.Option;
 import java.time.Duration;
 import java.util.Date;
 import java.util.List;
