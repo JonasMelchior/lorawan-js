@@ -186,7 +186,7 @@ public class JoinProcessor {
             netIDLE = Hex.encodeHexString(convertToLittleEndian(Hex.decodeHex(joinReq.getSenderID())));
             devAddrLE = Hex.encodeHexString(convertToLittleEndian(Hex.decodeHex(joinReq.getDevAddr())));
             if (joinReq.getcFList() != null) {
-                cFListLE = Hex.encodeHexString(convertToLittleEndian(Hex.decodeHex(joinReq.getcFList())));
+                cFListLE = joinReq.getcFList();
             }
         } catch (DecoderException e) {
             joinAnsErr.setResult(new Result(

@@ -1,4 +1,4 @@
-FROM maven:latest AS build
+FROM maven:3.8.6-eclipse-temurin-17 AS build
 USER root
 RUN apt-get update && apt-get install -y make protobuf-compiler git && rm -rf /var/lib/apt/lists/*
 WORKDIR /chirpstack

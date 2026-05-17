@@ -3,6 +3,19 @@
 This is the implementation of a LoRaWAN Join Server.
 The solution utilizes key stores from Bouncy Castle to secure the root key(s) and derived session keys in a cost-effective yet secure manner for large scale IoT projects.
 
+## Quickstart
+
+Run the Join Server using Docker Compose. 
+
+```
+sudo docker-compose up -d
+```
+
+This will create and run three containers on the host: 
+
+1. The Join Server on port 7090. Check out the documentation for the REST service on 'localhost:7090/docs'
+2. The UI for the Join Server on port 8080
+3. A PostgreSQL database 
 
 #### Default login: admin/admin
 
